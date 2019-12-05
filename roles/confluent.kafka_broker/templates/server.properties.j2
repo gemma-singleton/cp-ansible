@@ -9,10 +9,18 @@ broker.id={{ broker_id | default(groups.kafka_broker.index(inventory_hostname) +
 {{key}}={{value}}
 {% endfor %}
 
-listeners={% for listener in kafka_broker_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}://{{ listener['value']['hostname'] | default('') }}:{{ listener['value']['port'] }}{% endfor %}
+listeners={% for listener in kafka_broker_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}://:{{ listener['value']['port'] }}{% endfor %}
 
 listener.security.protocol.map={% for listener in kafka_broker_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}:{{ listener['value']['sasl_protocol'] | kafka_protocol(listener['value']['ssl_enabled'])}}{% endfor %}
 
+#{% if broker_advertised_listeners|length > 0 %}
+#advertised.listeners={{broker_advertised_listeners}}
+#{% endif %}
+
+ssl.principal.mapping.rules=RULE:^CN=(.*?),OU=(.*?),O=(.*?),L=(.*?),ST=(.*?),C=(.*?)$/$1/
+super.users=User:kafka;User:zookeeper;User:connect;User:ksql;User:controlcenter;User:restproxy;User:schemaregistry
+authorizer.class.name=kafka.security.auth.SimpleAclAuthorizer
+allow.everyone.if.no.acl.found=false
 
 ## Inter Broker Listener Configuration
 inter.broker.listener.name={{kafka_broker_listeners[kafka_broker_inter_broker_listener_name]['name']}}

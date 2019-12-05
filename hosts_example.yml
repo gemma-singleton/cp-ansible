@@ -1,32 +1,32 @@
 all:
   vars:
     ansible_connection: ssh
-    ansible_user: ec2-user
+    ansible_user: centos
     ansible_become: true
-    ansible_ssh_private_key_file: /tmp/certs/ssh_priv.pem
+    ansible_ssh_private_key_file: /Users/gemma/.ssh/gemma-us-west2.pem
 
     #### SASL Authentication Configuration ####
     ## By default there will be no SASL Authentication
     ## For SASL/PLAIN uncomment this line:
     # sasl_protocol: plain
     ## For SASL/GSSAPI uncomment this line and see Kerberos Configuration properties below
-    # sasl_protocol: kerberos
+    sasl_protocol: kerberos
 
     #### Kerberos Configuration ####
     ## Applicable when sasl_protocol is kerberos
-    # kerberos_kafka_broker_primary: <Name of the primary set on the kafka brokers' principal eg. kafka>
+    kerberos_kafka_broker_primary: kafka
     ## REQUIRED: Under each host set keytab file path and principal name, see below
-    # kerberos_configure: <Boolean for ansible to install kerberos packages and configure this file: /etc/krb5.conf, defaults to true>
-    # kerberos:
-    #   realm: <KDC server realm eg. confluent.example.com>
-    #   kdc_hostname: <hostname of machine with KDC running eg. ip-172-31-45-82.us-east-2.compute.internal>
-    #   admin_hostname: <hostname of machine with KDC running eg. ip-172-31-45-82.us-east-2.compute.internal>
+    kerberos_configure: true
+    kerberos:
+      realm: AD.BOOTCAMP.CONFLUENT.IO
+      kdc_hostname: ad.bootcamp.confluent.io
+      admin_hostname: ad.bootcamp.confluent.io
 
     #### TLS Configuration ####
     ## By default, data will NOT be encrypted. To turn on TLS encryption, uncomment this line
-    # ssl_enabled: true
+    ssl_enabled: true
     ## By default, the components will be configured with One-Way TLS, to turn on TLS mutual auth, uncomment this line:
-    # ssl_mutual_auth_enabled: true
+    ssl_mutual_auth_enabled: true
     ## By default, the certs for this configuration will be self signed, to deploy custom certificates there are two options.
     ## Option 1: Custom Certs
     ## You will need to provide the path to the Certificate Authority Cert used to sign each hosts' certs
@@ -38,12 +38,12 @@ all:
     # ssl_key_filepath: "/tmp/certs/{{inventory_hostname}}-key.pem"
     ## Option 2: Custom Keystores and Truststores
     ## CP-Ansible can move keystores/truststores to their corresponding hosts and configure the components to use them. Set These vars
-    # ssl_provided_keystore_and_truststore: true
-    # ssl_keystore_filepath: "/tmp/certs/{{inventory_hostname}}-keystore.jks"
-    # ssl_keystore_key_password: mystorepassword
-    # ssl_keystore_store_password: mystorepassword
-    # ssl_truststore_filepath: "/tmp/certs/truststore.jks"
-    # ssl_truststore_password: truststorepass
+    ssl_provided_keystore_and_truststore: true
+    ssl_keystore_filepath: "/Users/gemma/security-bootcamp/{{inventory_hostname}}.jks"
+    ssl_keystore_key_password: Confluent2019!
+    ssl_keystore_store_password: Confluent2019!
+    ssl_truststore_filepath: "/Users/gemma/security-bootcamp/client.truststore.jks"
+    ssl_truststore_password: Confluent2019!
 
     #### Monitoring Configuration ####
     ## Jolokia is enabled by default. The Jolokia jar gets pulled from the internet and enabled on all the components
@@ -125,57 +125,63 @@ all:
 
 zookeeper:
   hosts:
-    ip-172-31-34-246.us-east-2.compute.internal:
-      ## By default the first host will get zookeeper id=1, second gets id=2. Set zookeeper_id to customize
-      # zookeeper_id: 2
+    ec2-34-221-24-34.us-west-2.compute.amazonaws.com:
+      zookeeper_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma1.keytab
+      zookeeper_kerberos_principal: zookeeper/ip-172-30-37-166.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+    ec2-54-212-242-103.us-west-2.compute.amazonaws.com:
+      zookeeper_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma2.keytab
+      zookeeper_kerberos_principal: zookeeper/ip-172-30-43-131.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+    ec2-54-185-151-197.us-west-2.compute.amazonaws.com:
+      zookeeper_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma3.keytab
+      zookeeper_kerberos_principal: zookeeper/ip-172-30-36-139.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
 
-      ## For kerberos sasl protocol, EACH host will need these two variables:
-      # zookeeper_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/zookeeper-ip-172-31-34-246.us-east-2.compute.internal.keytab>
-      # zookeeper_kerberos_principal: <The principal configured in kdc server, eg. zookeeper/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
-    ip-172-31-37-15.us-east-2.compute.internal:
-      # zookeeper_id: 3
-    ip-172-31-34-231.us-east-2.compute.internal:
-      # zookeeper_id: 1
 kafka_broker:
   hosts:
-    ip-172-31-34-246.us-east-2.compute.internal:
-      ## By default the first host will get broker id=1, second gets id=2. Set broker_id to customize
-      # broker_id: 3
+    ec2-54-149-95-204.us-west-2.compute.amazonaws.com:
+      broker_advertised_listeners: EXTERNAL://ec2-54-149-95-204.us-west-2.compute.amazonaws.com:9092,INTERNAL://:9091
+      #broker_id = 2:
+      kafka_broker_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma4.keytab
+      kafka_broker_kerberos_principal: kafka/ip-172-30-37-229.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
 
-      ## For kerberos sasl protocol, EACH host will need these two variables:
-      # kafka_broker_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/ip-172-31-34-246.us-east-2.compute.internal>
-      # kafka_broker_kerberos_principal: <The principal configured in kdc server, eg. kafka/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
-    ip-172-31-37-15.us-east-2.compute.internal:
-      # broker_id: 2
-    ip-172-31-34-231.us-east-2.compute.internal:
-      # broker_id: 1
+    ec2-54-202-38-142.us-west-2.compute.amazonaws.com:
+      broker_advertised_listeners: EXTERNAL://ec2-54-202-38-142.us-west-2.compute.amazonaws.com:9092,INTERNAL://:9091
+      #broker_id = 3:
+      kafka_broker_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma5.keytab
+      kafka_broker_kerberos_principal: kafka/ip-172-30-47-165.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+
+    ec2-54-200-222-227.us-west-2.compute.amazonaws.com:
+      broker_advertised_listeners: EXTERNAL://ec2-54-200-222-227.us-west-2.compute.amazonaws.com:9092,INTERNAL://:9091
+      #broker_id = 1:
+      kafka_broker_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma6.keytab
+      kafka_broker_kerberos_principal: kafka/ip-172-30-34-95.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+
 schema_registry:
   hosts:
-    ip-172-31-34-246.us-east-2.compute.internal:
-      ## For kerberos sasl protocol, EACH host will need these two variables:
-      # schema_registry_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/schemaregistry-ip-172-31-34-246.us-east-2.compute.internal
-      # schema_registry_kerberos_principal: The principal configured in kdc server ex: schemaregistry/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+    ec2-35-162-84-115.us-west-2.compute.amazonaws.com:
+      schema_registry_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma7.keytab
+      schema_registry_kerberos_principal: schemaregistry/ip-172-30-39-96.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+
 kafka_connect:
   hosts:
-    ip-172-31-34-246.us-east-2.compute.internal:
-      ## For kerberos sasl protocol, EACH host will need these two variables:
-      # kafka_connect_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/connect-ip-172-31-34-246.us-east-2.compute.internal
-      # kafka_connect_kerberos_principal: The principal configured in kdc server ex: connect/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+    ec2-54-244-107-160.us-west-2.compute.amazonaws.com:
+      kafka_connect_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma8.keytab
+      kafka_connect_kerberos_principal: connect/ip-172-30-46-154.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+
 kafka_rest:
   hosts:
-    ip-172-31-34-246.us-east-2.compute.internal:
-      ## For kerberos sasl protocol, EACH host will need these two variables:
-      # kafka_rest_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/restproxy-ip-172-31-34-246.us-east-2.compute.internal
-      # kafka_rest_kerberos_principal: The principal configured in kdc server ex: restproxy/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+    ec2-35-162-84-115.us-west-2.compute.amazonaws.com:
+      kafka_rest_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma11.keytab
+      kafka_rest_kerberos_principal: kafkarest/ip-172-30-39-96.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+
 ksql:
   hosts:
-    ip-172-31-37-15.us-east-2.compute.internal:
-      ## For kerberos sasl protocol, EACH host will need these two variables:
-      # ksql_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/ksql-ip-172-31-37-15.us-east-2.compute.internal
-      # ksql_kerberos_principal: The principal configured in kdc server ex: ksql/ip-172-31-37-15.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+    ec2-18-236-194-88.us-west-2.compute.amazonaws.com:
+      ksql_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma10.keytab
+      ksql_kerberos_principal: ksql/ip-172-30-39-96.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+
 control_center:
   hosts:
-    ip-172-31-37-15.us-east-2.compute.internal:
-      ## For kerberos sasl protocol, EACH host will need these two variables:
-      # control_center_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/controlcenter-ip-172-31-37-15.us-east-2.compute.internal
-      # control_center_kerberos_principal: The principal configured in kdc server ex: controlcenter/ip-172-31-37-15.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+    ec2-35-162-84-115.us-west-2.compute.amazonaws.com:
+      control_center_kerberos_keytab_path: /Users/gemma/cp-ansible/gemmas-keytabs/gemma9.keytab
+      control_center_kerberos_principal: controlcenter/ip-172-30-39-96.us-west-2.compute.internal@AD.BOOTCAMP.CONFLUENT.IO
+    
