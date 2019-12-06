@@ -156,3 +156,6 @@ sasl_plain_users:
   schema_registry:
     principal: schema_registry
     password: schema_registry-secret
+  bootcamp:
+    principal: bootcamp
+    password: bootcamp-secret
