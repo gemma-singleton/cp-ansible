@@ -13,12 +13,12 @@ listeners={% for listener in kafka_broker_listeners|dict2items %}{% if loop.inde
 
 listener.security.protocol.map={% for listener in kafka_broker_listeners|dict2items %}{% if loop.index > 1%},{% endif %}{{ listener['value']['name'] }}:{{ listener['value']['sasl_protocol'] | kafka_protocol(listener['value']['ssl_enabled'])}}{% endfor %}
 
-#{% if broker_advertised_listeners|length > 0 %}
-#advertised.listeners={{broker_advertised_listeners}}
-#{% endif %}
+{% if broker_advertised_listeners|length > 0 %}
+advertised.listeners={{broker_advertised_listeners}}
+{% endif %}
 
 ssl.principal.mapping.rules=RULE:^CN=(.*?),OU=(.*?),O=(.*?),L=(.*?),ST=(.*?),C=(.*?)$/$1/
-super.users=User:kafka;User:zookeeper;User:connect;User:ksql;User:controlcenter;User:restproxy;User:schemaregistry
+super.users=User:ec2-54-149-95-204.us-west-2.compute.amazonaws.com;User:ec2-54-202-38-142.us-west-2.compute.amazonaws.com;User:ec2-54-200-222-227.us-west-2.compute.amazonaws.com;User:ec2-34-221-24-34.us-west-2.compute.amazonaws.com;User:ec2-54-212-242-103.us-west-2.compute.amazonaws.com;User:ec2-54-185-151-197.us-west-2.compute.amazonaws.com;User:ec2-35-162-84-115.us-west-2.compute.amazonaws.com;User:ec2-54-244-107-160.us-west-2.compute.amazonaws.com;User:ec2-18-236-194-88.us-west-2.compute.amazonaws.com
 authorizer.class.name=kafka.security.auth.SimpleAclAuthorizer
 allow.everyone.if.no.acl.found=false
 
@@ -57,7 +57,8 @@ confluent.metrics.reporter.ssl.key.password={{keystore_keypass}}
 {% if kafka_broker_listeners.external.sasl_protocol | normalize_sasl_protocol == 'PLAIN' %}
 confluent.metrics.reporter.sasl.mechanism=PLAIN
 confluent.metrics.reporter.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
-   username="{{sasl_plain_users.admin.principal}}" password="{{sasl_plain_users.admin.password}}";
+   username="{{sasl_plain_users.admin.principal}}" password="{{sasl_plain_users.admin.password}}"
+   user_bootcamp="bootcamp-secret";
 {% endif %}
 {% if kafka_broker_listeners.external.sasl_protocol | normalize_sasl_protocol == 'GSSAPI' %}
 confluent.metrics.reporter.sasl.mechanism=GSSAPI
